@@ -23,12 +23,14 @@ public class GameManager : Singleton<GameManager>
     [Header("Game-Events")]
     public UnityEvent OnGameOver;  // Event triggered on game over
     public UnityEvent OnGameVictory;  // Event triggered on game victory
-    public UnityEvent OnGameRestart;  // Event triggered on game restart
+    public UnityEvent OnGameRestart;
+    public UnityEvent OnTimeRunsOut;// Event triggered on game restart
 
     void Start()
     {
         GameTimer = new Timer(120f);  // Initialize timer with 120 seconds
         GameTimer.StartTimer();
+        GameTimer.OnTimerFinished += TimeRunsOut;
         AddScore(0);  // Initialize score
         EnablePanel(1);  // Show the main game panel
     }
@@ -82,5 +84,11 @@ public class GameManager : Singleton<GameManager>
 
         string currentSceneName = SceneManager.GetActiveScene().name;  // Get current scene name
         SceneManager.LoadScene(currentSceneName);  // Reload current scene
+    }
+
+    //On Time runs out
+    public void TimeRunsOut()
+    {
+        OnTimeRunsOut?.Invoke();
     }
 }

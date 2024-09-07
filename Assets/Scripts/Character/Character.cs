@@ -284,11 +284,14 @@ public class Character : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Collectable"))
+        if (collision.gameObject.CompareTag("Collectable") && GameManager.Instance.CollectableCubes.Contains(collision.gameObject))
         {
             Debug.Log("Collecting Item");
-            Destroy(collision.gameObject);
-            OnCollect?.Invoke(1);
+            GameManager.Instance.CollectableCubes.Remove(collision.gameObject);
+            collision.gameObject.GetComponent<Collider>().enabled = false;
+            
+            Collect(collision.gameObject);
+            
         }
     }
 
