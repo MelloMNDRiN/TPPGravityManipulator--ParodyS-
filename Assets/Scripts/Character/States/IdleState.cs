@@ -11,7 +11,10 @@ public class IdleState : ICharacterState
 
     public void UpdateState(Character character)
     {
-
+        if(!character.IsGrounded)
+        {
+            character.SetState(new JumpingState());
+        }
     }
     public void ExitState(Character character) { }
 }

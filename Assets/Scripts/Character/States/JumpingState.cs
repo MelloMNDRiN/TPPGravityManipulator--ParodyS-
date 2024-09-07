@@ -44,8 +44,6 @@ public class JumpingState : ICharacterState
         }
     }
 
-
-
     public void ExitState(Character character)
     {
        

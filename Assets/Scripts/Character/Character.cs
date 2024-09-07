@@ -15,6 +15,8 @@ public class Character : MonoBehaviour
 
     public float JumpPower;
 
+    public Transform FootTransform;
+
     #endregion
 
     #region HOLOGRAM
@@ -35,24 +37,27 @@ public class Character : MonoBehaviour
 
     #endregion
 
-    public Transform FootTransform;
 
+  
     public ICharacterState CurrentState { get; private set; }
     public ICharacterState OldState { get; private set; }
 
+    [SerializeField] private float GroundCheckDistance = 0.1f;
+    [SerializeField] private LayerMask GroundLayer;
+
+    #region COMPONENTS
     private Animator _animator;
     private GameCamera _gameCamera;
     private Rigidbody _rigidbody;
     public Animator Animator => _animator = _animator != null ? _animator : GetComponent<Animator>();
     public Rigidbody Rigidbody => _rigidbody = _rigidbody != null ? _rigidbody : GetComponent<Rigidbody>();
     public GameCamera GameCamera => _gameCamera = _gameCamera != null ? _gameCamera : GameCamera.Instance;
+    #endregion
+
+   
 
 
-    [SerializeField] private float GroundCheckDistance = 0.1f;
-    [SerializeField] private LayerMask GroundLayer;
-
-
-    public Timer FallTimer;
+ 
     #region GRAVITY 
 
     public Vector3 GravityDirection = Vector3.down;
@@ -60,6 +65,10 @@ public class Character : MonoBehaviour
 
     #endregion
 
+    [Space(5)]
+    public Timer FallTimer;
+    [Space(5)]
+    [Header("Events")]
     public UnityEvent<Vector3> OnGravitChange;
     public UnityEvent<int> OnCollect;
 
@@ -93,7 +102,7 @@ public class Character : MonoBehaviour
     {
         SetState(new IdleState());
 
-        FallTimer = new Timer(10f);
+        FallTimer = new Timer(3f);
         FallTimer.StartTimer();
 
         FallTimer.OnTimerFinished += GameManager.Instance.GameOver;
@@ -103,8 +112,7 @@ public class Character : MonoBehaviour
     private void Update()
     {
         
-
-        if (IsChangingGravity)
+        if (IsChangingGravity && CurrentState is not JumpingState)
         {
             SetState(new GravityManipulationState());
         }
@@ -112,7 +120,6 @@ public class Character : MonoBehaviour
         {
             HandleMovement();
         }
-
 
         if (IsGrounded)
         {
@@ -136,9 +143,6 @@ public class Character : MonoBehaviour
     {
         Rigidbody.AddForce(GravityDirection.normalized * GravityStrength, ForceMode.Acceleration);
     }
-
-
-    
 
     public void ChangeGravityDirection(Vector3 GravityDirection)
     {
@@ -170,12 +174,10 @@ public class Character : MonoBehaviour
 
     public void SetState(ICharacterState state)
     {
-
         CurrentState?.ExitState(this);
         OldState = CurrentState;
         CurrentState = state;
         CurrentState?.EnterState(this);
-
     }
     private void HandleMovement()
     {
@@ -190,7 +192,6 @@ public class Character : MonoBehaviour
             SetState(new JumpingState());
         }
     }
-
 
     public void Move(float speed)
     {
@@ -220,12 +221,6 @@ public class Character : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
     }
-
-
-
-
-
-
 
     public void ToggleHologram(bool tru)
     {
@@ -258,8 +253,6 @@ public class Character : MonoBehaviour
       
         HologramParent.rotation = Quaternion.Euler(finalEulerAngles);
     }
-
-
 
     private void OnCollisionEnter(Collision collision)
     {
@@ -320,6 +313,7 @@ public class Character : MonoBehaviour
     public void SetVictoryDance()
     {
         SetState(new DanceState());
+        enabled = false;
     }
 
     private void OnDrawGizmos()

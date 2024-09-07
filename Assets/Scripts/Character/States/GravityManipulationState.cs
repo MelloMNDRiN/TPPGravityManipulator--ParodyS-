@@ -1,9 +1,7 @@
 using UnityEngine;
-using UnityEngine.TextCore.Text;
 
 public class GravityManipulationState : ICharacterState
 {
-    private bool AppliedGravity = false;
     private Vector3 overrideDirection;
     private Vector3 oldDirection;
 
@@ -67,11 +65,4 @@ public class GravityManipulationState : ICharacterState
             oldDirection = overrideDirection;
         }
     }
-
-
-
-
-
-
-
 }
