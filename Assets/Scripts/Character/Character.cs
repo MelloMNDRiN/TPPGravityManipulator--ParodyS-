@@ -52,6 +52,7 @@ public class Character : MonoBehaviour
     [SerializeField] private LayerMask GroundLayer;
 
 
+    public Timer FallTimer;
     #region GRAVITY 
 
     public Vector3 GravityDirection = Vector3.down;
@@ -60,6 +61,7 @@ public class Character : MonoBehaviour
     #endregion
 
     public UnityEvent<Vector3> OnGravitChange;
+    public UnityEvent<int> OnCollect;
 
     public bool IsGrounded
     {
@@ -91,6 +93,11 @@ public class Character : MonoBehaviour
     {
         SetState(new IdleState());
 
+        FallTimer = new Timer(10f);
+        FallTimer.StartTimer();
+
+        FallTimer.OnTimerFinished += GameManager.Instance.GameOver;
+
         defaultRotation = transform.rotation;
     }
     private void Update()
@@ -106,8 +113,17 @@ public class Character : MonoBehaviour
             HandleMovement();
         }
 
-        
 
+        if (IsGrounded)
+        {
+            FallTimer.ResetTimer();
+        }
+        else
+        {
+            if (!FallTimer.IsRunning) FallTimer.StartTimer();
+
+            FallTimer.Update(Time.deltaTime);
+        }
 
         CurrentState?.UpdateState(this);
 
@@ -231,7 +247,7 @@ public class Character : MonoBehaviour
             Quaternion intermediateRotation = Quaternion.Slerp(initialRotation, targetRotation, elapsedTime / HoloSpeed);
 
             Vector3 eulerAngles = intermediateRotation.eulerAngles;
-           // eulerAngles.x = 90f;
+        
             HologramParent.rotation = Quaternion.Euler(eulerAngles);
 
             elapsedTime += Time.deltaTime;
@@ -239,13 +255,72 @@ public class Character : MonoBehaviour
         }
 
         Vector3 finalEulerAngles = targetRotation.eulerAngles;
-       // finalEulerAngles.x = 90f;
+      
         HologramParent.rotation = Quaternion.Euler(finalEulerAngles);
     }
 
 
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision.gameObject.CompareTag("Collectable") && GameManager.Instance.CollectableCubes.Contains(collision.gameObject))
+        {
+            GameManager.Instance.CollectableCubes.Remove(collision.gameObject);
+            Collect(collision.gameObject);
+            collision.gameObject.GetComponent<Collider>().enabled = false;
+        }
+    }
+    public void Collect(GameObject Go)
+    {
+        OnCollect?.Invoke(1);
+        StartCoroutine(ICollect(Go));
+    }
+    private IEnumerator ICollect(GameObject go)
+    {
 
+        float duration = 1.5f;
+        Vector3 startPosition = go.transform.position;
+        Vector3 targetPosition = transform.position;
+        float elapsedTime = 0f;
+
+
+        Vector3 initialScale = go.transform.localScale;
+
+        while (elapsedTime < duration)
+        {
+
+            float t = elapsedTime / duration;
+
+            if (go)
+            {
+                go.transform.Rotate(Vector3.up, 360 * Time.deltaTime / duration, Space.World);
+
+                go.transform.position = Vector3.Lerp(startPosition, targetPosition, t);
+
+                go.transform.localScale = Vector3.Lerp(initialScale, Vector3.zero, t);
+            }
+            else
+            {
+                yield break;
+            }
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+
+        go.transform.position = targetPosition;
+        go.transform.localScale = Vector3.zero;
+
+
+        Destroy(go);
+        yield break;
+    }
+
+    public void SetVictoryDance()
+    {
+        SetState(new DanceState());
+    }
 
     private void OnDrawGizmos()
     {
