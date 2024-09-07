@@ -4,17 +4,17 @@ using UnityEngine;
 [Serializable]
 public class Timer
 {
-    public event Action OnTimerStarted;
-    public event Action<float> OnTimerTick;
-    public event Action OnTimerFinished;
-    public event Action OnTimerPaused;
-    public event Action OnTimerResumed;
+    public event Action OnTimerStarted;  // Event for when the timer starts
+    public event Action<float> OnTimerTick;  // Event for each tick of the timer
+    public event Action OnTimerFinished;  // Event for when the timer finishes
+    public event Action OnTimerPaused;  // Event for when the timer is paused
+    public event Action OnTimerResumed;  // Event for when the timer resumes
 
-    [SerializeField] private float InitialDuration;
-    [SerializeField] private float Duration;
-    [SerializeField] private float TimeRemaining;
-    [SerializeField] public bool IsRunning;
-    [SerializeField] private bool IsPaused;
+    [SerializeField] private float InitialDuration;  // The initial duration of the timer
+    [SerializeField] private float Duration;  // The current duration of the timer
+    [SerializeField] private float TimeRemaining;  // How much time is left
+    [SerializeField] public bool IsRunning;  // Is the timer currently running?
+    [SerializeField] private bool IsPaused;  // Is the timer currently paused?
 
     public Timer(float initialDuration)
     {
@@ -30,17 +30,17 @@ public class Timer
         IsRunning = true;
         IsPaused = false;
 
-        OnTimerStarted?.Invoke();
+        OnTimerStarted?.Invoke();  // Notify that the timer has started
     }
 
     public void StartTimer()
     {
-        StartTimer(InitialDuration);
+        StartTimer(InitialDuration);  // Start timer with initial duration
     }
 
     public void StopTimer()
     {
-        IsRunning = false;
+        IsRunning = false;  // Stop the timer
     }
 
     public void PauseTimer()
@@ -48,7 +48,7 @@ public class Timer
         if (IsRunning && !IsPaused)
         {
             IsPaused = true;
-            OnTimerPaused?.Invoke();
+            OnTimerPaused?.Invoke();  // Notify that the timer has been paused
         }
     }
 
@@ -57,15 +57,15 @@ public class Timer
         if (IsRunning && IsPaused)
         {
             IsPaused = false;
-            OnTimerResumed?.Invoke();
+            OnTimerResumed?.Invoke();  // Notify that the timer has resumed
         }
     }
 
     public void ResetTimer()
     {
-        TimeRemaining = InitialDuration;
-        IsRunning = false;
-        IsPaused = false;
+        TimeRemaining = InitialDuration;  // Reset time to initial duration
+        IsRunning = false;  // Stop the timer
+        IsPaused = false;  // Make sure timer is not paused
     }
 
     public void SetDuration(float newDuration)
@@ -73,7 +73,7 @@ public class Timer
         Duration = newDuration;
         if (IsRunning && !IsPaused)
         {
-            TimeRemaining = newDuration;
+            TimeRemaining = newDuration;  // Update time remaining if timer is running
         }
     }
 
@@ -81,16 +81,16 @@ public class Timer
     {
         if (IsRunning && !IsPaused)
         {
-            TimeRemaining -= deltaTime;
+            TimeRemaining -= deltaTime;  // Decrease time remaining by deltaTime
 
-            OnTimerTick?.Invoke(TimeRemaining);
+            OnTimerTick?.Invoke(TimeRemaining);  // Notify about the current time remaining
 
             if (TimeRemaining <= 0f)
             {
                 TimeRemaining = 0f;
-                IsRunning = false;
+                IsRunning = false;  // Stop the timer if time is up
 
-                OnTimerFinished?.Invoke();
+                OnTimerFinished?.Invoke();  // Notify that the timer has finished
             }
         }
     }
@@ -98,6 +98,6 @@ public class Timer
     public override string ToString()
     {
         TimeSpan timeSpan = TimeSpan.FromSeconds(TimeRemaining);
-        return timeSpan.ToString(@"hh\:mm\:ss");
+        return timeSpan.ToString(@"hh\:mm\:ss");  // Format time as hh:mm:ss
     }
 }

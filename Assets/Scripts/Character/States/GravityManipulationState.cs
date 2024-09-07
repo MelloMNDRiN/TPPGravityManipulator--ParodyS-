@@ -9,6 +9,7 @@ public class GravityManipulationState : ICharacterState
     {
         character.ToggleHologram(true);
         overrideDirection = character.GravityDirection;
+        // Activating the hologram for gravity adjustments.
     }
 
     public void UpdateState(Character character)
@@ -16,6 +17,7 @@ public class GravityManipulationState : ICharacterState
         if (Input.GetKeyDown(KeyCode.Return))
         {
             character.SetState(new JumpingState());
+            // Switching to Jump... let's hope for a smooth landing.
         }
         else
         {
@@ -27,21 +29,21 @@ public class GravityManipulationState : ICharacterState
     {
         character.ChangeGravityDirection(overrideDirection);
         character.ToggleHologram(false);
+        
     }
+
     private void UpdateChangeGravity(Character character)
     {
-
         Vector3 gravityDirection = character.GravityDirection;
 
-
+        // Adjust directions relative to the current gravity.
         Vector3 worldForward = Vector3.forward;
         Vector3 worldRight = Vector3.right;
-
 
         Vector3 adjustedForward = Quaternion.FromToRotation(Vector3.up, gravityDirection) * worldForward;
         Vector3 adjustedRight = Quaternion.FromToRotation(Vector3.up, gravityDirection) * worldRight;
 
-        
+        // Modify gravity based on player's arrow input.
         if (Input.GetKey(KeyCode.UpArrow))
         {
             overrideDirection = adjustedForward;
@@ -58,6 +60,8 @@ public class GravityManipulationState : ICharacterState
         {
             overrideDirection = adjustedRight;
         }
+
+        // Rotate hologram only if the direction changed.
         if (overrideDirection != oldDirection)
         {
             Quaternion targetRotation = Quaternion.LookRotation(overrideDirection, gravityDirection);
