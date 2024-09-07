@@ -13,6 +13,7 @@ public class GameCamera : Singleton<GameCamera>
     [SerializeField] private float MaxVerticalAngle = 45f;
     [SerializeField] private LayerMask CollisionLayers;
     [SerializeField] private float CollisionOffset = 0.2f;
+    [SerializeField] private Vector3 GravityDirection = Vector3.down;
 
     private float CurrentX = 0f;
     private float CurrentY = 0f;
@@ -37,6 +38,11 @@ public class GameCamera : Singleton<GameCamera>
         HandleCameraCollision();
     }
 
+    public void OnGravityChange(Vector3 direction)
+    {
+        GravityDirection = direction;
+    }
+
     private void HandleInput()
     {
         CurrentX += Input.GetAxis("Mouse X") * RotationSpeed * Time.deltaTime;
@@ -48,11 +54,15 @@ public class GameCamera : Singleton<GameCamera>
 
     private void HandleCameraMovement()
     {
-        Quaternion rotation = Quaternion.Euler(CurrentY, CurrentX, 0);
-        Vector3 direction = rotation * Vector3.back;
+        Quaternion targetRotation = Quaternion.Euler(CurrentY, CurrentX, 0);
+        Quaternion gravityRotation = Quaternion.FromToRotation(Vector3.up, -GravityDirection);
+        Quaternion finalRotation = gravityRotation * targetRotation;
+
+        Vector3 direction = finalRotation * Vector3.back;
         DesiredPosition = Target.position + direction * CurrentDistance;
+
         transform.position = Vector3.SmoothDamp(transform.position, DesiredPosition, ref SmoothVelocity, SmoothSpeed);
-        transform.LookAt(Target.position);
+        transform.rotation = finalRotation;
     }
 
     private void HandleCameraCollision()

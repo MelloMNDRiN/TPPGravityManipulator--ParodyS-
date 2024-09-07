@@ -1,5 +1,7 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(Animator))]
@@ -8,8 +10,10 @@ public class Character : MonoBehaviour
 {
     #region MOVEMENT
 
-    private float MovementSpeed;
-    private float RotationSpeed;
+    [field: SerializeField] public float MovementSpeed { get; private set; }
+    [field: SerializeField] public float RotationSpeed { get; private set; }
+
+    public float JumpPower;
 
     #endregion
 
@@ -31,10 +35,10 @@ public class Character : MonoBehaviour
 
     #endregion
 
-    [SerializeField] private Transform FootTransform;
+    public Transform FootTransform;
 
     public ICharacterState CurrentState { get; private set; }
-
+    public ICharacterState OldState { get; private set; }
 
     private Animator _animator;
     private GameCamera _gameCamera;
@@ -55,23 +59,16 @@ public class Character : MonoBehaviour
 
     #endregion
 
-
+    public UnityEvent<Vector3> OnGravitChange;
 
     public bool IsGrounded
     {
         get
         {
-
-            Vector3 raycastStart = FootTransform.position;
-
-            return Physics.Raycast(raycastStart, Vector3.down, GroundCheckDistance, GroundLayer) ||
-                   Physics.Raycast(raycastStart + Vector3.right * 0.1f, Vector3.down, GroundCheckDistance, GroundLayer) ||
-                   Physics.Raycast(raycastStart - Vector3.right * 0.1f, Vector3.down, GroundCheckDistance, GroundLayer) ||
-                   Physics.Raycast(raycastStart + Vector3.forward * 0.1f, Vector3.down, GroundCheckDistance, GroundLayer) ||
-                   Physics.Raycast(raycastStart - Vector3.forward * 0.1f, Vector3.down, GroundCheckDistance, GroundLayer);
+            return Physics.Raycast(FootTransform.position, GravityDirection, GroundCheckDistance, GroundLayer);
         }
     }
-    public bool IsMoving => Mathf.Abs(Input.GetAxis("Horizontal")) > Mathf.Epsilon || Mathf.Abs(Input.GetAxis("Vertical")) > Mathf.Epsilon;
+    public bool IsMoving => (Mathf.Abs(Input.GetAxis("Horizontal")) > Mathf.Epsilon || Mathf.Abs(Input.GetAxis("Vertical")) > Mathf.Epsilon);
     public bool IsChangingGravity
     {
         get
@@ -98,7 +95,7 @@ public class Character : MonoBehaviour
     }
     private void Update()
     {
-        CurrentState?.UpdateState(this);
+        
 
         if (IsChangingGravity)
         {
@@ -108,7 +105,12 @@ public class Character : MonoBehaviour
         {
             HandleMovement();
         }
+
         
+
+
+        CurrentState?.UpdateState(this);
+
     }
     private void FixedUpdate()
     {
@@ -128,11 +130,14 @@ public class Character : MonoBehaviour
 
         Debug.Log($"Changing Gravity Direction to {GravityDirection}");
 
+        OnGravitChange?.Invoke(GravityDirection);
+
+       
         StartCoroutine(AlignPlayerWithGravityCoroutine());
     }
     private IEnumerator AlignPlayerWithGravityCoroutine()
     {
-        Vector3 upDirection = - GravityDirection.normalized;
+        Vector3 upDirection = -GravityDirection.normalized;
         Quaternion targetRotation = Quaternion.FromToRotation(transform.up, upDirection) * transform.rotation;
 
         float elapsedTime = 0f;
@@ -141,31 +146,71 @@ public class Character : MonoBehaviour
         while (elapsedTime < 1f)
         {
             transform.rotation = Quaternion.Slerp(initialRotation, targetRotation, elapsedTime);
-            elapsedTime += Time.deltaTime * RotationSpeed;
+            elapsedTime += Time.deltaTime * 10f;
             yield return null;
         }
         transform.rotation = targetRotation;
     }
+
     public void SetState(ICharacterState state)
     {
 
         CurrentState?.ExitState(this);
+        OldState = CurrentState;
         CurrentState = state;
         CurrentState?.EnterState(this);
 
     }
     private void HandleMovement()
     {
-        if(IsMoving && IsGrounded)
+        if (IsMoving && IsGrounded)
         {
             SetState(new WalkingState());
+           
         }
 
-        if(Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded)
         {
             SetState(new JumpingState());
         }
     }
+
+
+    public void Move(float speed)
+    {
+        float horizontalInput = Input.GetAxis("Horizontal");
+        float verticalInput = Input.GetAxis("Vertical");
+
+        Vector3 movement = new Vector3(horizontalInput, 0, verticalInput);
+
+        Vector3 adjustedMovement = Quaternion.FromToRotation(Vector3.up, -GravityDirection) * movement;
+
+        transform.position += adjustedMovement * speed * Time.deltaTime;
+    }
+
+    public void Rotate(float rotationSpeed)
+    {
+        float horizontalInput = Input.GetAxis("Horizontal");
+        float verticalInput = Input.GetAxis("Vertical");
+
+        Vector3 movement = new Vector3(horizontalInput, 0, verticalInput);
+
+        Vector3 adjustedMovement = Quaternion.FromToRotation(Vector3.up, -GravityDirection) * movement;
+
+        if (adjustedMovement != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(adjustedMovement.normalized, -GravityDirection);
+
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+        }
+    }
+
+
+
+
+
+
+
     public void ToggleHologram(bool tru)
     {
         gHologram.SetActive(tru);
@@ -175,6 +220,7 @@ public class Character : MonoBehaviour
     {
         StartCoroutine(IRotateHoloToTarget(targetRotation));
     }
+
     private IEnumerator IRotateHoloToTarget(Quaternion targetRotation)
     {
         Quaternion initialRotation = HologramParent.rotation;
@@ -182,14 +228,24 @@ public class Character : MonoBehaviour
 
         while (elapsedTime < HoloSpeed)
         {
-            HologramParent.rotation = Quaternion.Slerp(initialRotation, targetRotation, elapsedTime / HoloSpeed);
+            Quaternion intermediateRotation = Quaternion.Slerp(initialRotation, targetRotation, elapsedTime / HoloSpeed);
+
+            Vector3 eulerAngles = intermediateRotation.eulerAngles;
+           // eulerAngles.x = 90f;
+            HologramParent.rotation = Quaternion.Euler(eulerAngles);
+
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-
-        HologramParent.rotation = targetRotation;
+        Vector3 finalEulerAngles = targetRotation.eulerAngles;
+       // finalEulerAngles.x = 90f;
+        HologramParent.rotation = Quaternion.Euler(finalEulerAngles);
     }
+
+
+
+
 
     private void OnDrawGizmos()
     {

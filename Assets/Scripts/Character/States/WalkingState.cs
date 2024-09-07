@@ -5,8 +5,10 @@ public class WalkingState : ICharacterState
     public readonly string STATE_NAME = "Walk";
     public void EnterState(Character character)
     {
+
         character.Animator.Play(STATE_NAME);
         Debug.Log($"Entering {STATE_NAME} State");
+
     }
     public void UpdateState(Character character)
     {
@@ -14,6 +16,12 @@ public class WalkingState : ICharacterState
         {
             character.SetState(new IdleState());
         }
+        else
+        {
+            character.Move(character.MovementSpeed);
+            character.Rotate(character.RotationSpeed);
+        }
+
         if (Input.GetKeyDown(KeyCode.Space) && character.IsGrounded)
         {
             character.SetState(new JumpingState());

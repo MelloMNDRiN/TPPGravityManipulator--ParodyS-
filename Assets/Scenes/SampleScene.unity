@@ -643,19 +643,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af5223addf8bf884a999bad50abc03db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 541184903}
-  distance: 5
-  minDistance: 2
-  maxDistance: 10
-  smoothSpeed: 0.125
-  rotationSpeed: 150
-  zoomSpeed: 2
-  minVerticalAngle: -45
-  maxVerticalAngle: 45
-  collisionLayers:
+  Target: {fileID: 541184903}
+  Distance: 5
+  MinDistance: 2
+  MaxDistance: 10
+  SmoothSpeed: 0.125
+  RotationSpeed: 150
+  ZoomSpeed: 2
+  MinVerticalAngle: -45
+  MaxVerticalAngle: 45
+  CollisionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  collisionOffset: 0.2
+  CollisionOffset: 0.2
 --- !u!1 &332389497
 GameObject:
   m_ObjectHideFlags: 0
@@ -1978,7 +1978,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1357953449}
-  - component: {fileID: 1357953450}
   m_Layer: 3
   m_Name: Holo
   m_TagString: Untagged
@@ -2002,25 +2001,6 @@ Transform:
   m_Father: {fileID: 543450653259175915}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1357953450
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1357953448}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0c4d888aaba4c7147b063ab6f19a541e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gHologram: {fileID: 74973497}
-  holoSpeed: 0.4
-  directionRight: {x: 0.49999997, y: 0.49999997, z: -0.49999997, w: 0.49999997}
-  directionLeft: {x: 0.49999997, y: -0.49999997, z: 0.49999997, w: 0.49999997}
-  directionBack: {x: 0.70710677, y: 0, z: 0, w: 0.70710677}
-  directionFront: {x: -0.00000003090862, y: 0.70710677, z: -0.70710677, w: -0.00000003090862}
-  IsActive: 0
 --- !u!1 &1386102519
 GameObject:
   m_ObjectHideFlags: 0
@@ -2045,7 +2025,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1386102519}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.045, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2734,8 +2714,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 919132149603880273}
-  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 0.988327, y: 0, z: 0.17}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.988327, y: 1.0581847, z: -0.93687046}
   m_LocalScale: {x: 1.3094, y: 1.3277316, z: 1.3094}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2752,7 +2732,7 @@ Transform:
   - {fileID: 1357953449}
   m_Father: {fileID: 0}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &919132149603880273
 GameObject:
   m_ObjectHideFlags: 0
@@ -2806,15 +2786,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 800ae5ef6ee39f8489f24f06b61fbcee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementSpeed: 2
-  jumpForce: 5
-  gravityScale: -9.8
-  hologram: {fileID: 74973498}
-  groundLayers:
+  MovementSpeed: 1
+  RotationSpeed: 1
+  JumpPower: 0
+  HologramParent: {fileID: 1357953449}
+  gHologram: {fileID: 74973497}
+  HoloSpeed: 0.5
+  directionRight: {x: 0, y: 0, z: 0, w: 0}
+  directionLeft: {x: 0, y: 0, z: 0, w: 0}
+  directionBack: {x: 0, y: 0, z: 0, w: 0}
+  directionFront: {x: 0, y: 0, z: 0, w: 0}
+  FootTransform: {fileID: 1386102520}
+  GroundCheckDistance: 0.1
+  GroundLayer:
     serializedVersion: 2
     m_Bits: 55
-  _isJumping: 0
-  FootTransform: {fileID: 1386102520}
+  GravityDirection: {x: 0, y: -1, z: 0}
+  GravityStrength: 9.81
 --- !u!136 &919132149603880276
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -2835,9 +2823,9 @@ CapsuleCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.21470323
-  m_Height: 1.7479362
+  m_Height: 1.7151275
   m_Direction: 1
-  m_Center: {x: 0.012765427, y: 0.84225184, z: 0}
+  m_Center: {x: 0.012765427, y: 0.8586573, z: 0}
 --- !u!54 &919132149603880277
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2860,7 +2848,7 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 112
